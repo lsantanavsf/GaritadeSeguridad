@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Mi Portal - Residente</title>
+    <style>
+        :root {
+            --primary: #1a252f;
+            --blue: #3498db;
+            --green: #27ae60;
+            --light: #f4f7f6;
+            --text-dark: #2c3e50;
+            --red: #e74c3c;
+            --gray: #7f8c8d;
+            --warning: #f39c12;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: var(--light);
+            margin: 0;
+            display: flex;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 260px;
+            background: var(--primary);
+            color: white;
+            height: 100vh;
+            padding: 25px;
+            position: fixed;
+            box-sizing: border-box;
+        }
+
+        .sidebar h2 {
+            color: var(--blue);
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 1.2rem;
+            border-bottom: 1px solid #34495e;
+            padding-bottom: 15px;
+        }
+
+        .nav-link {
+            display: block;
+            color: #adb5bd;
+            text-decoration: none;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            transition: 0.3s;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            background: var(--blue);
+            color: white;
+        }
+
+        .btn-logout {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 12px;
+            width: 100%;
+            cursor: pointer;
+            border-radius: 8px;
+            margin-top: 50px;
+            font-weight: bold;
+        }
+
+        /* Contenido */
+        .main-content {
+            margin-left: 260px;
+            flex: 1;
+            padding: 40px;
+        }
+
+        .welcome-header {
+            margin-bottom: 30px;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 25px;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Sección del Código */
+        .codigo-card {
+            text-align: center;
+            border-top: 5px solid var(--blue);
+        }
+
+        .codigo-display {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--blue);
+            background: #f0f7ff;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+            border: 2px dashed var(--blue);
+            letter-spacing: 2px;
+        }
+
+        /* Historial */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th {
+            text-align: left;
+            padding: 15px;
+            border-bottom: 2px solid #eee;
+            color: #7f8c8d;
+        }
+
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #f9f9f9;
+            color: var(--text-dark);
+        }
+
+        .btn-qr {
+            background: var(--green);
+            color: white;
+            border: none;
+            padding: 15px;
+            width: 100%;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: 0.3s;
+            margin-bottom: 10px;
+        }
+
+        .btn-qr:hover {
+            background: #219150;
+            transform: translateY(-2px);
+        }
+
+        /* Selector de estado estilizado interactivo */
+        .select-status {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: white;
+            border: none;
+            cursor: pointer;
+            outline: none;
+            text-align: center;
+            appearance: none;
+            -webkit-appearance: none;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        /* Modal Base */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            width: 340px;
+        }
+
+        .modal-content input {
+            width: 100%;
+            padding: 12px;
+            margin: 5px 0 15px 0;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+
+        .qr-img-container {
+            width: 220px;
+            height: 220px;
+            margin: 20px auto;
+            background: #eee;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .qr-img-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="sidebar">
+        <h2>SISTEMA GARITA</h2>
+        <nav>
+            <a href="#" class="nav-link active"> Mi Portal</a>
+            <a href="#" class="nav-link" onclick="abrirModalInvitacion()">🔑 Crear Invitación</a>
+            <a href="#" class="nav-link" onclick="alert('Cargando historial completo...')"> Historial Total</a>
+        </nav>
+        <button class="btn-logout" onclick="cerrarSesion()">CERRAR SESIÓN</button>
+    </div>
+
+    <div class="main-content">
+        <div class="welcome-header">
+            <h1 id="nombreUsuario">Hola, Residente</h1>
+            <p>Bienvenido al portal de residentes de <strong>Residenciales Tec</strong>.</p>
+        </div>
+
+        <div class="grid-container">
+            <div class="card codigo-card">
+                <h3>Mi Código de Acceso</h3>
+                <p style="color: #666;">Muestra este código al ingresar:</p>
+                <div class="codigo-display" id="casaCodigo">CASA-102</div>
+                <button class="btn-qr" style="background: var(--blue);" onclick="mostrarQRMiAcceso()">VER MI QR</button>
+                <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+                <p><strong>Invitación Temporal</strong></p>
+                <p style="font-size: 0.9rem; color: #7f8c8d;">Genera un pase rápido para tus visitas.</p>
+                <button class="btn-qr" onclick="abrirModalInvitacion()">CREAR INVITACIÓN QR</button>
+            </div>
+
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h3>Visitas Recientes</h3>
+                    <span style="color: var(--green); font-size: 0.9rem; font-weight: bold;">● Vivienda Segura</span>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Fecha/Hora</th>
+                            <th>Visitante</th>
+                            <th>Placa / Acceso</th>
+                            <th>Estado Actual</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaVisitas"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalQR" class="modal-overlay" onclick="cerrarQR()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <h3 style="margin: 0;">Tu Código QR Permanente</h3>
+            <p style="color: #666; font-size: 0.9rem;">Presenta este código en la entrada principal</p>
+            <div class="qr-img-container" id="contenedorQR">
+                <p style="color:#999; font-size: 0.8rem;">Generando...</p>
+            </div>
+            <button class="btn-qr" style="background: var(--primary);" onclick="cerrarQR()">CERRAR</button>
+        </div>
+    </div>
+
+    <div id="modalInvitacion" class="modal-overlay">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <h3 style="margin: 0;">Generar Invitación Temporal</h3>
+            <p style="color: #666; font-size: 0.85rem; margin-bottom: 15px;">Se registrará el acceso y se enviará el QR directo a tu invitado.</p>
+
+            <label style="float:left; font-size:0.9rem; font-weight:bold; color:var(--text-dark)">Nombre del Visitante</label>
+            <input type="text" id="nombreVisitante" placeholder="Ej. Roberto Gómez">
+
+            <label style="float:left; font-size:0.9rem; font-weight:bold; color:var(--text-dark)">Placa del Vehículo (Opcional)</label>
+            <input type="text" id="placaVisitante" placeholder="Ej. P-123ABC">
+
+            <label style="float:left; font-size:0.9rem; font-weight:bold; color:var(--text-dark)">Correo del Invitado</label>
+            <input type="email" id="correoVisitante" placeholder="amigo@correo.com">
+
+            <div style="display: flex; gap: 10px;">
+                <button class="btn-qr" style="flex:1;" id="btnEnviarModal" onclick="enviarInvitacion()">Enviar QR</button>
+                <button class="btn-qr" style="background:var(--red); flex:1;" onclick="cerrarModalInvitacion()">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = "http://127.0.0.1:8000";
+        const RESIDENTE_ID = localStorage.getItem('residente_id') || localStorage.getItem('usuario_id') || 1;
+        let miNumeroCasa = "102"; 
+
+        window.onload = async () => {
+            await cargarDatosResidente();
+            await cargarVisitasRecientes();
+        };
+
+        async function cargarDatosResidente() {
+            try {
+                const response = await fetch(`${API_URL}/residentes/`);
+                if (!response.ok) throw new Error("Error en la conexión");
+                const residentes = await response.json();
+                const miData = residentes.find(r => r.id == RESIDENTE_ID);
+
+                if (miData) {
+                    document.getElementById('nombreUsuario').innerText = `Hola, ${miData.nombre_propietario}`;
+                    document.getElementById('casaCodigo').innerText = miData.numero_casa;
+                    miNumeroCasa = miData.numero_casa;
+                }
+            } catch (error) {
+                console.error("Error al cargar perfil:", error);
+                document.getElementById('nombreUsuario').innerText = "Error cargando datos";
+            }
+        }
+
+        // LÓGICA DE PERSISTENCIA: Recupera la base de datos de estados manuales del navegador
+        function obtenerEstadosManuales() {
+            return JSON.parse(localStorage.getItem('estadosManualesVecino')) || {};
+        }
+
+        // LÓGICA DE PERSISTENCIA: Guarda el estado vinculándolo al ID único de la fila
+        function guardarEstadoManual(accesoId, nuevoEstado) {
+            const estados = obtenerEstadosManuales();
+            estados[accesoId] = nuevoEstado;
+            localStorage.setItem('estadosManualesVecino', JSON.stringify(estados));
+        }
+
+        function obtenerColorPorEstado(estado) {
+            if (estado === "ADENTRO") return "var(--green)";
+            if (estado === "YA SALIÓ") return "var(--gray)";
+            return "var(--warning)"; // EN ESPERA
+        }
+
+        async function cargarVisitasRecientes() {
+            try {
+                const response = await fetch(`${API_URL}/accesos/`);
+                if (!response.ok) throw new Error("Error cargando visitas");
+                const visitasAPI = await response.json();
+
+                const tbody = document.getElementById('tablaVisitas');
+                tbody.innerHTML = "";
+
+                // Filtramos las visitas de este residente desde tu API en FastAPI
+                const misVisitas = visitasAPI.filter(v => v.residente_id == RESIDENTE_ID);
+                const estadosManuales = obtenerEstadosManuales();
+
+                if (misVisitas.length === 0) {
+                    tbody.innerHTML = "<tr><td colspan='4' style='text-align:center; color: #7f8c8d;'>No tienes registros de visitas aún.</td></tr>";
+                    return;
+                }
+
+                misVisitas.forEach(v => {
+                    let fechaRaw = v.fecha_entrada || v.fecha_salida;
+                    let fechaFormateada = fechaRaw ? new Date(fechaRaw).toLocaleString('es-GT') : "Pendiente";
+
+                    // Asigna el estado guardado en memoria. Si no existe interacción previa, por defecto inicia 'EN ESPERA'
+                    let estadoActual = estadosManuales[v.id] || "EN ESPERA";
+                    let colorFondo = obtenerColorPorEstado(estadoActual);
+
+                    let placaDisplay = v.placa_vehiculo;
+                    if (!placaDisplay || placaDisplay.toUpperCase() === "A PIE") {
+                        placaDisplay = "🚶 PEATÓN";
+                    } else {
+                        placaDisplay = `🚘 ${placaDisplay.toUpperCase()}`;
+                    }
+
+                    let nombreFormateado = v.nombre_visitante.toLowerCase().replace(/(^\w|\s\w)/g, m => m.toUpperCase());
+
+                    // Renderiza la columna de estado como un Select Dinámico
+                    tbody.innerHTML += `
+                    <tr>
+                        <td>${fechaFormateada}</td>
+                        <td><strong>${nombreFormateado}</strong></td>
+                        <td><code>${placaDisplay}</code></td>
+                        <td>
+                            <select class="select-status" style="background:${colorFondo};" onchange="cambiarEstadoFila(this, ${v.id})">
+                                <option value="EN ESPERA" ${estadoActual === 'EN ESPERA' ? 'selected' : ''}>EN ESPERA</option>
+                                <option value="ADENTRO" ${estadoActual === 'ADENTRO' ? 'selected' : ''}>ADENTRO</option>
+                                <option value="YA SALIÓ" ${estadoActual === 'YA SALIÓ' ? 'selected' : ''}>YA SALIÓ</option>
+                            </select>
+                        </td>
+                    </tr>`;
+                });
+            } catch (error) {
+                console.error("Error cargando historial:", error);
+                const tbody = document.getElementById('tablaVisitas');
+                if (tbody) {
+                    tbody.innerHTML = "<tr><td colspan='4' style='text-align:center; color: var(--red);'>Error de conexión con el servidor.</td></tr>";
+                }
+            }
+        }
+
+        // Ejecuta el cambio visual en caliente y llama a la persistencia local
+        function cambiarEstadoFila(selectElement, accesoId) {
+            const nuevoEstado = selectElement.value;
+            selectElement.style.background = obtenerColorPorEstado(nuevoEstado);
+            guardarEstadoManual(accesoId, nuevoEstado);
+        }
+
+        function mostrarQRMiAcceso() {
+            const urlQR = `${API_URL}/residentes/qr/${RESIDENTE_ID}`;
+            const contenedor = document.getElementById('contenedorQR');
+            contenedor.innerHTML = `<img src="${urlQR}?t=${new Date().getTime()}" alt="QR Acceso">`;
+            document.getElementById('modalQR').style.display = 'flex';
+        }
+
+        function cerrarQR() {
+            document.getElementById('modalQR').style.display = 'none';
+        }
+
+        function abrirModalInvitacion() {
+            document.getElementById('modalInvitacion').style.display = 'flex';
+        }
+
+        function cerrarModalInvitacion() {
+            document.getElementById('modalInvitacion').style.display = 'none';
+            document.getElementById('nombreVisitante').value = "";
+            document.getElementById('placaVisitante').value = "";
+            document.getElementById('correoVisitante').value = "";
+        }
+
+        async function enviarInvitacion() {
+            const nombre = document.getElementById('nombreVisitante').value;
+            const placa = document.getElementById('placaVisitante').value || "A PIE";
+            const correo = document.getElementById('correoVisitante').value;
+            const btn = document.getElementById('btnEnviarModal');
+
+            if (!nombre) return alert("Por favor, introduce el nombre de la visita.");
+            if (!correo) return alert("Por favor, introduce el correo de tu invitado.");
+
+            btn.disabled = true;
+            btn.innerText = "Enviando...";
+
+            try {
+                const response = await fetch(`${API_URL}/accesos/`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        residente_id: parseInt(RESIDENTE_ID),
+                        nombre_visitante: nombre,
+                        placa_vehiculo: placa,
+                        correo_invitado: correo
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.status === "success") {
+                    alert(`¡Invitación registrada con éxito!\nToken Generado: ${data.token_generado}`);
+                    cerrarModalInvitacion();
+                    await cargarVisitasRecientes();
+                } else {
+                    alert("Error al procesar la invitación en el servidor.");
+                }
+            } catch (error) {
+                console.error(error);
+                alert("Error de conexión con el backend.");
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Enviar QR";
+            }
+        }
+
+        // 🛠️ MODIFICACIÓN CRUCIAL: Ahora ya no borra toda la base de datos de los estados
+        function cerrarSesion() {
+            localStorage.removeItem('residente_id');
+            localStorage.removeItem('usuario_id');
+            window.location.href = '../login.html';
+        }
+    </script>
+</body>
+</html>

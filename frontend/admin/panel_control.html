@@ -1,0 +1,1092 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Centro de Control - Residencial Inteligente</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #34495e;
+            --accent: #3498db;
+            --success: #2ecc71;
+            --warning: #f1c40f;
+            --danger: #e74c3c;
+            --light-bg: #f8f9fa;
+            --dark-text: #2c3e50;
+            --text-muted: #7f8c8d;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--light-bg);
+            color: var(--dark-text);
+            overflow-x: hidden;
+        }
+  
+        /* Estilos de la Estructura (Sidebar & Layout) */
+        #wrapper {
+            display: flex;
+            width: 100%;
+            align-items: stretch;
+        }
+
+        #sidebar {
+            min-width: 280px;
+            max-width: 280px;
+            background: var(--primary);
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: all 0.3s;
+        }
+
+        #sidebar .sidebar-header {
+            padding: 20px;
+            background: #1a252f;
+            text-align: center;
+            border-bottom: 1px solid #415b76;
+        }
+
+        #sidebar ul.components {
+            padding: 20px 0;
+            flex-grow: 1;
+        }
+
+        #sidebar ul li a {
+            padding: 12px 20px;
+            font-size: 1.1em;
+            display: block;
+            color: #bdc3c7;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        #sidebar ul li a:hover,
+        #sidebar ul li.active>a {
+            color: #fff;
+            background: var(--secondary);
+            border-left: 4px solid var(--accent);
+        }
+
+        .sidebar-footer {
+            padding: 20px;
+            background: #1a252f;
+            border-top: 1px solid #415b76;
+        }
+
+        #content {
+            width: 100%;
+            padding: 30px;
+            min-height: 100vh;
+            transition: all 0.3s;
+        }
+
+        /* Secciones del Panel */
+        .section {
+            display: none;
+        }
+
+        .active-section {
+            display: block;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Tarjetas de Métricas */
+        .card-counter {
+            box-shadow: 2px 2px 10px #dadada;
+            margin-bottom: 20px;
+            padding: 20px 15px;
+            background-color: #fff;
+            height: 100px;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card-counter:hover {
+            box-shadow: 4px 4px 20px #b5b5b5;
+            transform: scale(1.02);
+        }
+
+        /* Modales Avanzados */
+        .custom-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .custom-modal-content {
+            background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            width: 500px;
+            max-width: 90%;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        /* Contenedor de Reloj Digital */
+        .live-clock-container {
+            background: #edf2f7;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--primary);
+            box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="wrapper">
+        <nav id="sidebar">
+            <div>
+                <div class="sidebar-header">
+                    <h4>Core Residencial</h4>
+                    <span class="badge badge-success">SISTEMA ONLINE</span>
+                </div>
+
+                <ul class="list-unstyled components">
+                    <li class="active">
+                        <a href="#" class="nav-link active" onclick="showSection('vecinos', this)">🏠 Identidades
+                            Residenciales</a>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-link" onclick="showSection('personal', this)">🔑 Control de Roles
+                            (IAM)</a>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-link" onclick="showSection('servicio', this)">
+                            🛡️ Operación Garita
+                            <span id="badgeContadorAgentes" class="badge badge-warning">0 Activos</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-link text-warning" onclick="showSection('vistaAgenteAdmin', this)">👁️
+                            Panel del Agente (Admin)</a>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-link" onclick="showSection('reportes', this)">📊 Auditoría y
+                            Telemetría</a>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-link" onclick="showSection('config', this)">⚙️ Configuración Core</a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="sidebar-footer">
+                <button class="btn btn-outline-danger btn-block" onclick="cerrarSesion()">🚪 Cerrar Sesión</button>
+            </div>
+        </nav>
+
+        <div id="content">
+            <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-4">
+                <div>
+                    <h1 id="mainTitle" class="h2 m-0">Gestión de Identidades Residenciales</h1>
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                    <div class="live-clock-container mr-3">
+                        📅 <span id="txtFechaCore">--/--/----</span> | 🕒 <span id="txtHoraCore">00:00:00 AM</span>
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-outline-secondary btn-sm" onclick="location.reload();">🔄 Refrescar
+                            Panel</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card-counter bg-primary text-white">
+                        <div class="count-numbers h3 mt-2" id="metricaCasas">--</div>
+                        <div class="count-name">Casas Registradas</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card-counter bg-success text-white">
+                        <div class="count-numbers h3 mt-2" id="metricaAccesosHoy">--</div>
+                        <div class="count-name">Accesos (Hoy)</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card-counter bg-info text-white">
+                        <div class="count-numbers h3 mt-2" id="metricaStaff">--</div>
+                        <div class="count-name">Personal Interno</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card-counter bg-danger text-white">
+                        <div class="count-numbers h3 mt-2" id="metricaAlertas">0</div>
+                        <div class="count-name">Alertas de Red</div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="vecinos" class="section active-section">
+                <div class="card card-body mb-4">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <input type="text" id="busquedaVecinos" class="form-control"
+                                placeholder="🔍 Buscar por número de casa o propietario...">
+                        </div>
+                        <div class="col-md-4">
+                            <button class="btn btn-primary btn-block" onclick="abrirModal('vecino')">➕ Dar de Alta
+                                Residente</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-responsive bg-white rounded shadow-sm p-3">
+                    <table class="table table-hover">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>ID Reg</th>
+                                <th>Propiedad / Casa</th>
+                                <th>Propietario Legal</th>
+                                <th>Canal Notificaciones</th>
+                                <th>Estado Cuenta</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaVecinos">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="personal" class="section">
+                <div class="card card-body mb-4">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h5>Mapeo de Control de Acceso basado en Roles (RBAC)</h5>
+                            <p class="text-muted m-0">Administración de identidades críticas del ecosistema.</p>
+                        </div>
+                        <div class="col-md-4">
+                            <button class="btn btn-danger btn-block" onclick="abrirModal('personal')">🔐 Registrar
+                                Identidad Staff (IAM)</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-responsive bg-white rounded shadow-sm p-3">
+                    <table class="table table-striped">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th>Username o Identificador</th>
+                                <th>Rol Asignado</th>
+                                <th>Estado Operativo</th>
+                                <th>Políticas de Permisos Estrictos</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaUsuariosIAM">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="servicio" class="section">
+                <div class="row">
+                    <div class="col-md-7">
+                        <div class="card shadow-sm mb-4">
+                            <div class="card-header bg-dark text-white">
+                                <h5 class="m-0">🛡️ Personal de Seguridad en Turno Activo</h5>
+                            </div>
+                            <div class="card-body">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Agente de Seguridad</th>
+                                            <th>Puesto de Vigilancia</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="listaAgentesServicio">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-5">
+                        <div class="card shadow-sm mb-4">
+                            <div
+                                class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                                <h5 class="m-0">🧹 Colaboradores de Limpieza</h5>
+                                <button class="btn btn-sm btn-light"
+                                    onclick="abrirModal('servicio_limpieza')">Añadir</button>
+                            </div>
+                            <div class="card-body">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Nombre</th>
+                                            <th>Área Asignada</th>
+                                            <th>Estado</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="listaPersonalLimpieza">
+                                        <tr>
+                                            <td><strong>Carlos Pérez</strong></td>
+                                            <td><span class="badge badge-info">Zonas Verdes</span></td>
+                                            <td><span class="badge badge-success">● En Turno</span></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="vistaAgenteAdmin" class="section">
+                <div class="alert alert-warning">
+                    <strong>Modo Supervisor:</strong> Estás visualizando la interfaz de escaneo y control operativo de
+                    la Garita de Seguridad.
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card shadow-sm mb-4">
+                            <div class="card-header bg-success text-white">📲 Simulador de Escaneo de Código QR</div>
+                            <div class="card-body text-center py-5">
+                                <div
+                                    style="border: 3px dashed #bdc3c7; padding: 30px; border-radius: 10px; background: #fafafa;">
+                                    <span style="font-size: 3.5rem;">📷</span>
+                                    <h5 class="mt-3">Cámara de Garita Lista</h5>
+                                    <p class="text-muted small">Apunte el QR del visitante al lector físico</p>
+                                    <input type="text" id="inputSimularQR" class="form-control text-center mx-auto"
+                                        style="max-width: 280px;" placeholder="Ingrese ID de Registro para simular...">
+                                    <button class="btn btn-success btn-sm mt-3"
+                                        onclick="alert('Simulando procesamiento de Token QR...')">Procesar Acceso
+                                        Manual</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card shadow-sm mb-4">
+                            <div class="card-header bg-primary text-white"> Entrada Manual (Sin Invitación QR)</div>
+                            <div class="card-body">
+                                <form id="formIngresoManualGarita">
+                                    <div class="form-group">
+                                        <label>Nombre del Visitante / Proveedor</label>
+                                        <input type="text" id="agenteNombreVisitante"
+                                            class="form-control form-control-sm"
+                                            placeholder="Ej: Distribuidora de Alimentos" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Placa del Vehículo</label>
+                                        <input type="text" id="agentePlacaVehiculo" class="form-control form-control-sm"
+                                            placeholder="P-000XXX">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>Seleccione Calle</label>
+                                        <select id="agenteCalleDestino" class="form-control form-control-sm" required>
+                                            <option value="" disabled selected>-- Seleccione Calle --</option>
+                                            <option value="10 Calle">10 Calle</option>
+                                            <option value="11 Calle">11 Calle</option>
+                                            <option value="12 Calle">12 Calle</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>Casa de Destino</label>
+                                        <input type="number" id="agenteResidenteId" class="form-control form-control-sm"
+                                            placeholder="Número de casa" required>
+                                    </div>
+                                    <button type="button" class="btn btn-primary btn-block btn-sm"
+                                        onclick="registrarIngresoManualGarita()">Autorizar e Registrar Ingreso</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="reportes" class="section">
+                <div class="row mb-4">
+                    <div class="col-md-12">
+                        <div class="card shadow-sm">
+                            <div class="card-header">📊 Flujo Analítico de Tráfico Vehicular y Peatonal</div>
+                            <div class="card-body" style="height: 300px; position: relative;">
+                                <canvas id="trafficChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card card-body mb-4">
+                    <input type="text" id="busquedaLogs" class="form-control"
+                        placeholder="🔍 Auditoría en tiempo real: Filtre logs por Nombre de Visitante o Placa Vehicular...">
+                </div>
+
+                <div class="table-responsive bg-white rounded shadow-sm p-3">
+                    <table class="table table-sm table-hover">
+                        <thead class="bg-secondary text-white">
+                            <tr>
+                                <th>Log ID</th>
+                                <th>Nombre Visitante</th>
+                                <th>Placa Vehículo</th>
+                                <th>Destino Autorizado</th>
+                                <th>Marca Entrada</th>
+                                <th>Marca Salida</th>
+                                <th>Método Acceso</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaAuditoriaQR">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="config" class="section">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-secondary text-white">🎛️ Parámetros del Ecosistema Residencial</div>
+                    <div class="card-body">
+                        <form id="formConfig">
+                            <div class="form-group">
+                                <label>Duración Estándar de Token QR Invitado (Horas)</label>
+                                <input type="number" class="form-control" value="24">
+                            </div>
+                            <div class="form-group">
+                                <label>Límite Máximo de Vehículos Simultáneos por Propiedad</label>
+                                <input type="number" class="form-control" value="4">
+                            </div>
+                            <button type="button" class="btn btn-success"
+                                onclick="alert('Configuración guardada en el Core del sistema')">Guardar Cambios
+                                Locales</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div id="miModal" class="custom-modal">
+        <div class="custom-modal-content">
+            <h4 id="modalTitulo" class="mb-4">Formulario Core</h4>
+
+            <div class="form-group">
+                <label id="label1">Campo 1</label>
+                <input type="text" id="input1" class="form-control">
+            </div>
+
+            <div class="form-group">
+                <label id="label2">Campo 2</label>
+                <input type="text" id="input2" class="form-control">
+            </div>
+
+            <div class="form-group" id="campoCorreo" style="display: none;">
+                <label>Correo Electrónico para Alertas / Notificaciones</label>
+                <input type="email" id="inputEmail" class="form-control">
+            </div>
+
+            <div class="form-group" id="campoRol" style="display: none;">
+                <label>Asignación de Rol de Seguridad / Acceso</label>
+                <select id="selectRol" class="form-control">
+                    <option value="vecino">Vecino / Residente</option>
+                    <option value="agente">Agente de Garita</option>
+                    <option value="seguridad">Supervisor de Seguridad</option>
+                    <option value="admin">Administrador General</option>
+                </select>
+            </div>
+
+            <div class="form-group" id="campoAreaLimpieza" style="display: none;">
+                <label>Área Operativa de Limpieza</label>
+                <select id="selectAreaLimpieza" class="form-control">
+                    <option value="Zonas Verdes">Zonas Verdes</option>
+                    <option value="Interiores Administrativos">Interiores Administrativos</option>
+                    <option value="Calles y Avenidas">Calles y Avenidas</option>
+                </select>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2 mt-4">
+                <button class="btn btn-secondary mr-2" onclick="cerrarModal()">Cancelar</button>
+                <button class="btn btn-primary" onclick="guardarDatos()">Guardar Registro</button>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        
+        
+            //  CONFIGURACIÓN GLOBAL Y ESTADO DEL CORE
+            
+            const API_URL = "http://localhost:8000";
+            let contextoActual = "";
+            let miGrafica = null;
+
+            // Variable global para almacenar accesos y filtrarlos localmente (Optimización de red)
+            let registrosAccesosGlobal = [];
+
+        // Inicialización del Ecosistema al cargar el DOM
+        document.addEventListener("DOMContentLoaded", () => {
+                initChart();
+            cargarResidentes();
+            cargarUsuarios();
+            auditarAccesosReales();
+            actualizarMetricasDashboard();
+
+            // Iniciar Reloj del Sistema Core
+            iniciarRelojCore();
+        });
+
+            //  SISTEMA DE RELOJ Y FECHA DINÁMICA DE GUATEMALA
+            function iniciarRelojCore() {
+            const elFecha = document.getElementById('txtFechaCore');
+            const elHora = document.getElementById('txtHoraCore');
+            if (!elFecha || !elHora) return;
+
+            function actualizarTiempo() {
+                const ahora = new Date();
+
+            // Formato de Fecha Latinoamericano (es-GT)
+            elFecha.innerText = ahora.toLocaleDateString('es-GT', {
+                day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+                });
+
+            // Formato de Hora de 12 horas con AM/PM
+            elHora.innerText = ahora.toLocaleTimeString('es-GT', {
+                hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: true
+                });
+            }
+            actualizarTiempo();
+            setInterval(actualizarTiempo, 1000); // Refrescar cada segundo exacto
+        }
+
+            // FUNCIÓN DE CIERRE DE SESIÓN CORREGIDA
+            function cerrarSesion() {
+            if (confirm("¿Estás seguro de que deseas cerrar sesión en el Centro de Control?")) {
+                console.log("Limpiando tokens de autenticación y memoria caché...");
+
+            // Limpieza de persistencia en navegador por seguridad
+            localStorage.removeItem('usuario_rol');
+            localStorage.removeItem('usuario_id');
+            localStorage.removeItem('usuario_nombre');
+
+            alert("Sesión finalizada de forma segura.");
+            // Redirección subiendo un nivel en la estructura de directorios hacia el login
+            window.location.href = '../login.html';
+            }
+        }
+
+            //  1. CARGAR RESIDENTES (VECINOS) DESDE BACKEND
+            async function cargarResidentes() {
+            try {
+                const response = await fetch(`${API_URL}/residentes/`);
+            if (!response.ok) throw new Error("Fallo al consultar residentes.");
+            const residentes = await response.json();
+
+            const tbody = document.getElementById('tablaVecinos');
+            if (!tbody) return;
+            tbody.innerHTML = "";
+
+                residentes.forEach(res => {
+                tbody.innerHTML += `
+                        <tr>
+                            <td><code>#RES-${String(res.id).padStart(3, '0')}</code></td>
+                            <td><strong>Casa ${res.numero_casa}</strong></td>
+                            <td>${res.nombre_propietario}</td>
+                            <td><small class="text-muted">${res.correo_notificacion || 'N/A'}</small></td>
+                            <td><span class="badge badge-success">Solvente</span></td>
+                        </tr>`;
+                });
+
+            const metricaCasas = document.getElementById('metricaCasas');
+            if (metricaCasas) metricaCasas.innerText = residentes.length;
+            } catch (error) {
+                console.error("Error cargando residentes:", error);
+            }
+        }
+
+            //  2. CONTROL DE ACCESOS Y ROLES (IAM)
+            async function cargarUsuarios() {
+            try {
+                const response = await fetch(`${API_URL}/usuarios/`);
+            if (!response.ok) throw new Error("Error al obtener los usuarios del backend");
+
+            const usuarios = await response.json();
+            const tbodyIAM = document.getElementById('tablaUsuariosIAM');
+
+            if (tbodyIAM) {
+                tbodyIAM.innerHTML = "";
+                }
+
+                usuarios.forEach(user => {
+                let nombreUsuario = user.username || user.name || "Usuario S/N";
+            let userRol = String(user.rol || '').toLowerCase().trim();
+
+            let badgeRol = userRol === 'admin' ? 'badge-danger' : (userRol === 'vecino' ? 'badge-info' : 'badge-warning');
+            let permisos = userRol === 'admin' ? '✨ Full Access (Root)' : (userRol === 'vecino' ? '🏠 Gestión de Visitas Propias' : '🛡️ Control de Garita');
+
+            if (tbodyIAM) {
+                tbodyIAM.innerHTML += `
+                        <tr>
+                            <td><strong>${nombreUsuario}</strong></td>
+                            <td><span class="badge ${badgeRol}">${userRol.toUpperCase()}</span></td>
+                            <td><span class="badge badge-success">● Activo</span></td>
+                            <td><small>${permisos}</small></td>
+                        </tr>`;
+                    }
+                });
+
+            // Enviar los mismos usuarios para actualizar la sección de Operación Garita
+            cargarAgentesGarita(usuarios);
+
+            } catch (e) {
+                console.error("Error crítico cargando el personal en el frontend:", e);
+            }
+        }
+
+            //  3. CONTROL EXCLUSIVO DE AGENTES DE GARITA
+            function cargarAgentesGarita(usuarios) {
+            const tbodyAgentes = document.getElementById('listaAgentesServicio');
+            const badgeContador = document.getElementById('badgeContadorAgentes');
+
+            if (!tbodyAgentes) return;
+            tbodyAgentes.innerHTML = "";
+            let contadorAgentes = 0;
+
+            usuarios.forEach(user => {
+                let nombreUsuario = user.username || user.name || user.usuario || "Agente S/N";
+            let rawRol = user.rol || user.role || user.tipo_usuario || '';
+            let userRol = String(rawRol).toLowerCase().trim();
+
+            // Validación flexible de agentes de seguridad
+            if (userRol === 'agente' || userRol === 'seguridad' || userRol === 'guardia') {
+                contadorAgentes++;
+
+            // Mapeo inteligente para asignar puestos dinámicos
+            let puestoAsignado = (nombreUsuario.toLowerCase().includes("garita") || user.id === 2)
+            ? "Garita Principal"
+            : "Patrullaje Central / Ronda";
+
+            if (nombreUsuario.toLowerCase().includes("tigre") || user.id === 7) {
+                puestoAsignado = "Patrullaje Central / Ronda";
+                    }
+
+            tbodyAgentes.innerHTML += `
+            <tr>
+                <td>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span>🛡️</span>
+                        <strong>${nombreUsuario}</strong>
+                    </div>
+                </td>
+                <td>
+                    <div style="display: flex; gap: 5px; align-items: center;">
+                        <span class="badge badge-info">${puestoAsignado}</span>
+                        <span class="badge badge-success">● En Turno</span>
+                    </div>
+                </td>
+            </tr>`;
+                }
+            });
+
+            // Actualización dinámica de los estados del Contador en Garita
+            if (badgeContador) {
+                if (contadorAgentes === 0) {
+                badgeContador.innerText = "0 En Servicio";
+            badgeContador.className = "badge badge-danger";
+            tbodyAgentes.innerHTML = `<tr><td colspan="2" style="text-align:center; color:var(--red); font-size:0.85rem; padding: 20px;">⚠️ Alerta: No hay agentes asignados en la base de datos</td></tr>`;
+                } else {
+                badgeContador.innerText = `${contadorAgentes} Activos`;
+            badgeContador.className = "badge badge-warning";
+                }
+            }
+        }
+
+            //  4. AUDITORÍA Y TELEMETRÍA GLOBAL (LOGS DE ACCESO REALES)
+            async function auditarAccesosReales() {
+            try {
+                const response = await fetch(`${API_URL}/accesos/`);
+            if (!response.ok) throw new Error("Fallo al obtener el historial de accesos");
+
+            registrosAccesosGlobal = await response.json();
+            console.log("Logs de auditoría recibidos:", registrosAccesosGlobal);
+
+            // Renderizar la tabla inicialmente con todos los datos
+            renderizarTablaLogs(registrosAccesosGlobal);
+
+            } catch (error) {
+                console.error("Error al obtener los logs de auditoría:", error);
+            }
+        }
+
+            function renderizarTablaLogs(listaAccesos) {
+            const tbodyAuditoria = document.getElementById('tablaAuditoriaQR');
+            if (!tbodyAuditoria) return;
+
+            tbodyAuditoria.innerHTML = "";
+
+            if (listaAccesos.length === 0) {
+                tbodyAuditoria.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--text-muted); padding:20px;">ℹ️ No se encontraron registros de accesos.</td></tr>`;
+            return;
+            }
+
+            // Ordenamos los registros por ID de forma descendente (el más reciente primero)
+            listaAccesos.sort((a, b) => b.id - a.id);
+
+            listaAccesos.forEach(log => {
+                // Formatear Fechas de entrada y salida
+                let entrada = log.fecha_entrada ? formatearFecha(log.fecha_entrada) : `<span class="badge badge-secondary">⏳ Pendiente (Invitación)</span>`;
+            let salida = log.fecha_salida ? formatearFecha(log.fecha_salida) : `<span class="badge badge-success">🟢 Dentro del Residencial</span>`;
+
+            // Estilos visuales según el tipo de acceso
+            let badgeTipo = log.tipo_acceso === 'QR' ? 'badge-primary' : 'badge-warning';
+            let iconTipo = log.tipo_acceso === 'QR' ? '📱' : '✍️';
+            let placaTexto = log.placa_vehiculo ? log.placa_vehiculo.toUpperCase() : "A PIE";
+
+            tbodyAuditoria.innerHTML += `
+            <tr>
+                <td><code>#REG-${String(log.id).padStart(4, '0')}</code></td>
+                <td><strong>${log.nombre_visitante || "Desconocido"}</strong></td>
+                <td><span class="badge badge-dark">${placaTexto}</span></td>
+                <td><span class="badge badge-info">Casa #${log.residente_id}</span></td>
+                <td><small>${entrada}</small></td>
+                <td><small>${salida}</small></td>
+                <td><span class="badge ${badgeTipo}">${iconTipo} ${log.tipo_acceso}</span></td>
+            </tr>`;
+            });
+
+            const metricaAccesosHoy = document.getElementById('metricaAccesosHoy');
+            if (metricaAccesosHoy) metricaAccesosHoy.innerText = listaAccesos.length;
+        }
+
+            // Función auxiliar para formatear las marcas de tiempo (Formato de Guatemala)
+            function formatearFecha(fechaStr) {
+            if (!fechaStr) return "";
+            try {
+                const fecha = new Date(fechaStr);
+            return fecha.toLocaleString('es-GT', {
+                day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+                });
+            } catch (e) {
+                return fechaStr;
+            }
+        }
+
+            //  5. MÓDULO OPERATIVO INTEGRADO (SIMULACIÓN DE INTERFAZ DE GARITA)
+            async function verificarCodigoQR() {
+            const inputQR = document.getElementById('inputSimularQR');
+            if (!inputQR || !inputQR.value.trim()) return alert("Por favor, ingrese o escanee un código QR válido.");
+
+            const token = inputQR.value.trim();
+
+            try {
+                const response = await fetch(`${API_URL}/accesos/verificar-qr/`, {
+                method: 'POST',
+            headers: {'Content-Type': 'application/json' },
+            body: JSON.stringify({token: token })
+                });
+
+            if (response.ok) {
+                    const resultado = await response.json();
+            alert(` Acceso Autorizado para: ${resultado.nombre_visitante || 'Visitante'}. Abriendo talanquera.`);
+            inputQR.value = "";
+            auditarAccesosReales();
+                } else {
+                    const errorData = await response.json();
+            alert(`❌ Código QR Inválido o Expirado: ${errorData.detail || 'Consulte con administración.'}`);
+                }
+            } catch (e) {
+                console.error("Error al verificar QR en garita:", e);
+            alert("Error de comunicación con el lector de garita.");
+            }
+        }
+
+            async function registrarIngresoManualGarita() {
+            const nombre = document.getElementById('agenteNombreVisitante').value.trim();
+            const placa = document.getElementById('agentePlacaVehiculo').value.trim();
+            const calle = document.getElementById('agenteCalleDestino').value;
+            const casaId = document.getElementById('agenteResidenteId').value.trim();
+
+            if (!nombre || !calle || !casaId) {
+                return alert("El nombre del visitante, la calle y el número de casa son obligatorios para el registro manual.");
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/accesos/`, {
+                method: 'POST',
+            headers: {'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                nombre_visitante: nombre,
+            placa_vehiculo: placa || null,
+            residente_id: parseInt(casaId, 10),
+            tipo_acceso: 'MANUAL',
+            fecha_entrada: new Date().toISOString()
+                    })
+                });
+
+            if (response.ok) {
+                alert(` Registro manual completado con éxito.\nDestino: ${calle}, Casa #${casaId}`);
+
+            // Resetear formulario interno del módulo operativo
+            document.getElementById('agenteNombreVisitante').value = "";
+            document.getElementById('agentePlacaVehiculo').value = "";
+            document.getElementById('agenteCalleDestino').value = "";
+            document.getElementById('agenteResidenteId').value = "";
+
+            auditarAccesosReales();
+                } else {
+                alert("Fallo al procesar el ingreso manual en el servidor.");
+                }
+            } catch (e) {
+                console.error("Error en registro manual de garita:", e);
+            alert("Error de red al intentar registrar el ingreso.");
+            }
+        }
+
+            //  6. METRICAS Y CONTROLADORES DE INTERFAZ GENERAL
+            async function actualizarMetricasDashboard() {
+            try {
+                const resUser = await fetch(`${API_URL}/usuarios/`);
+            if (resUser.ok) {
+                    const users = await resUser.json();
+            const metricaStaff = document.getElementById('metricaStaff');
+            if (metricaStaff) metricaStaff.innerText = users.length;
+                }
+            } catch (e) {console.error(e); }
+        }
+
+        // ESCUCHAS DE EVENTOS PARA FILTRADO INTERACTIVO EN TIEMPO REAL
+        document.addEventListener("keyup", e => {
+            if (e.target.matches("#busquedaVecinos")) filtrarVecinos();
+            if (e.target.matches("#busquedaLogs")) filtrarLogsEnMemoria();
+        });
+
+            function filtrarVecinos() {
+            const input = document.getElementById("busquedaVecinos");
+            if (!input) return;
+            const texto = input.value.toLowerCase().trim();
+            const filas = document.querySelectorAll("#tablaVecinos tr");
+            filas.forEach(fila => {
+                if (fila.cells.length > 1) {
+                    const casa = fila.cells[1].innerText.toLowerCase();
+            const propietario = fila.cells[2].innerText.toLowerCase();
+            fila.style.display = (casa.includes(texto) || propietario.includes(texto)) ? "" : "none";
+                }
+            });
+        }
+
+            function filtrarLogsEnMemoria() {
+            const input = document.getElementById("busquedaLogs");
+            if (!input) return;
+            const termino = input.value.toLowerCase().trim();
+
+            if (termino === "") {
+                renderizarTablaLogs(registrosAccesosGlobal);
+            return;
+            }
+
+            // Filtrado eficiente avanzado directamente sobre el estado en memoria global
+            const filtrados = registrosAccesosGlobal.filter(log => {
+                const nombre = (log.nombre_visitante || "").toLowerCase();
+            const placa = (log.placa_vehiculo || "").toLowerCase();
+            return nombre.includes(termino) || placa.includes(termino);
+            });
+
+            renderizarTablaLogs(filtrados);
+        }
+
+            // ENRUTADOR INTERNO DE SECCIONES (SHOW SECTION VISTA ACTIVE)
+            function showSection(sectionId, element) {
+                document.querySelectorAll('.section').forEach(s => s.classList.remove('active-section'));
+            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+
+            const targetSection = document.getElementById(sectionId);
+            if (targetSection) targetSection.classList.add('active-section');
+            if (element) element.classList.add('active');
+
+            const titles = {
+                'vecinos': 'Gestión de Identidades Residenciales',
+            'personal': 'Control de Accesos y Roles (IAM)',
+            'servicio': 'Operación Garita y Seguridad Activa',
+            'vistaAgenteAdmin': 'Módulo Operativo - Simulación de Garita',
+            'reportes': 'Auditoría y Telemetría Global',
+            'config': 'Configuración del Sistema Core'
+            };
+            const titleElement = document.getElementById('mainTitle');
+            if (titleElement) titleElement.innerText = titles[sectionId] || 'Centro de Control';
+        }
+
+            // RENDERIZADO ANALÍTICO DE TRAFFIC CHART
+            function initChart() {
+            const canvas = document.getElementById('trafficChart');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            miGrafica = new Chart(ctx, {
+                type: 'line',
+            data: {
+                labels: ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'],
+            datasets: [{
+                label: 'Flujo de Accesos Registrados',
+            data: [5, 12, 8, 15, 22, 35, 28],
+            backgroundColor: 'rgba(52, 152, 219, 0.1)',
+            borderColor: 'rgba(52, 152, 219, 1)',
+            borderWidth: 3,
+            tension: 0.4,
+            fill: true
+                    }]
+                },
+            options: {responsive: true, maintainAspectRatio: false }
+            });
+        }
+
+            //  7. CONTROLADOR GENERAL DE MODALES DINÁMICOS
+            function abrirModal(tipo) {
+                contextoActual = tipo;
+            const modal = document.getElementById('miModal');
+            if (!modal) return;
+
+            modal.style.display = 'flex';
+            document.getElementById('campoRol').style.display = tipo === 'personal' ? 'block' : 'none';
+            document.getElementById('campoCorreo').style.display = tipo === 'vecino' ? 'block' : 'none';
+            document.getElementById('campoAreaLimpieza').style.display = tipo === 'servicio_limpieza' ? 'block' : 'none';
+
+            const titulo = document.getElementById('modalTitulo');
+            const label1 = document.getElementById('label1');
+            const label2 = document.getElementById('label2');
+
+            if (tipo === 'vecino') {
+                titulo.innerText = "Dar de Alta Residente";
+            label1.innerText = "Número de Casa o Propiedad";
+            label2.innerText = "Nombre Completo del Propietario";
+            } else if (tipo === 'servicio_limpieza') {
+                titulo.innerText = "Registrar Personal de Limpieza";
+            label1.innerText = "Nombre del Colaborador";
+            label2.innerText = "DPI / Identificación";
+            } else {
+                titulo.innerText = "Registrar Identidad Staff (IAM)";
+            label1.innerText = "Username o Identificador";
+            label2.innerText = "Contraseña Temporal de Acceso";
+            }
+        }
+
+            const modalElement = document.getElementById('miModal');
+            if (modalElement) {
+                modalElement.addEventListener('click', function (e) { if (e.target === this) cerrarModal(); });
+        }
+
+            function cerrarModal() {
+            const modal = document.getElementById('miModal');
+            if (!modal) return;
+            modal.style.display = 'none';
+            document.getElementById('input1').value = "";
+            document.getElementById('input2').value = "";
+            document.getElementById('inputEmail').value = "";
+        }
+
+            // GUARDADO DE DATOS (POST HACIA EL BACKEND EN BASE AL CONTEXTO ACTUAL)
+            async function guardarDatos() {
+            const val1 = document.getElementById('input1').value.trim();
+            const val2 = document.getElementById('input2').value.trim();
+            const email = document.getElementById('inputEmail').value.trim();
+            const rol = document.getElementById('selectRol').value;
+            const area = document.getElementById('selectAreaLimpieza').value;
+
+            if (!val1 || !val2) return alert("Complete los campos obligatorios.");
+
+            if (contextoActual === 'servicio_limpieza') {
+                const tbodyLimpieza = document.getElementById('listaPersonalLimpieza');
+            if (tbodyLimpieza) {
+                tbodyLimpieza.innerHTML += `
+                        <tr>
+                            <td><strong>${val1}</strong></td>
+                            <td><span class="badge badge-info">${area}</span></td>
+                            <td><span class="badge badge-success">● En Turno</span></td>
+                        </tr>`;
+                }
+            cerrarModal();
+            return;
+            }
+
+            try {
+                let response;
+            if (contextoActual === 'vecino') {
+                response = await fetch(`${API_URL}/residentes/`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        numero_casa: val1,
+                        nombre_propietario: val2,
+                        correo_notificacion: email
+                    })
+                });
+                } else {
+                response = await fetch(`${API_URL}/usuarios/`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: val1, password: val2, rol: rol })
+                });
+                }
+
+            if (response.ok) {
+                cerrarModal();
+            cargarResidentes();
+            cargarUsuarios();
+            actualizarMetricasDashboard();
+                } else {
+                alert("Fallo al guardar en backend.");
+                }
+            } catch (e) {
+                console.error(e);
+            alert("Error de conexión con el servidor.");
+            }
+        }
+    </script>
+</body>
+
+</html>

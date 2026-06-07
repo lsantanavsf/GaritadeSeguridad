@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acceso - Garita Tecnológica</title>
+    <style>
+        /* Estilos de accesibilidad y diseño profesional */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #2c3e50;
+            display: flex;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        /* Contenedor principal dividido en dos columnas */
+        .login-container {
+            display: flex;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Columna de la Imagen (Izquierda) */
+        .login-image-side {
+            flex: 1.2;
+            /* RUTA CORRECTA: Al estar en la misma carpeta, se llama directo */
+            background-image: url('garita.jpg');
+            background-size: cover;
+            background-position: center;
+            position: relative;
+            background-color: #2c3e50;
+            /* Color de respaldo por seguridad */
+        }
+
+        /* Capa oscura superpuesta para integrar la imagen con el tono del software */
+        .login-image-side::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(44, 62, 80, 0.4);
+        }
+
+        /* Columna del Formulario (Derecha) */
+        .login-form-side {
+            flex: 1;
+            background-color: #f8f9fa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            /* Centrado vertical absoluto */
+            padding: 40px;
+        }
+
+        /* AJUSTE: Tarjeta optimizada y subida para evitar cortes inferiores */
+        .login-card {
+            background: white;
+            padding: 35px 45px;
+            /* Compactado sutilmente */
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+            width: 100%;
+            max-width: 430px;
+            text-align: center;
+            box-sizing: border-box;
+        }
+
+        h2 {
+            color: #34495e;
+            margin: 0 0 5px 0;
+            font-size: 1.8rem;
+        }
+
+        .subtitle {
+            color: #7f8c8d;
+            margin-bottom: 25px;
+            font-size: 0.95rem;
+        }
+
+        /* Inputs y Selectores optimizados para fácil uso táctil */
+        input,
+        select {
+            width: 100%;
+            padding: 15px;
+            /* Tamaño ideal: cómodo y no desborda */
+            margin: 10px 0;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 1.05rem;
+        }
+
+        input:focus,
+        select:focus {
+            border-color: #3498db;
+            outline: none;
+            box-shadow: 0 0 8px rgba(52, 152, 219, 0.3);
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            background: #3498db;
+            border: none;
+            color: white;
+            font-weight: bold;
+            font-size: 1.15rem;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background 0.3s, transform 0.1s;
+        }
+
+        button:hover {
+            background: #2980b9;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        .btn-google {
+            background: #95a5a6;
+            margin-top: 10px;
+            font-size: 0.95rem;
+            padding: 12px;
+        }
+
+        .btn-google:hover {
+            background: #7f8c8d;
+        }
+
+        .links-extra {
+            margin-top: 15px;
+        }
+
+        .links-extra a {
+            color: #3498db;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 1rem;
+        }
+
+        .links-extra a:hover {
+            text-decoration: underline;
+        }
+
+        /* --- ESTILOS ASISTENTE VIRTUAL --- */
+        .chat-widget-btn {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            width: 60px;
+            height: 60px;
+            background: #27ae60;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+            font-size: 1.8rem;
+            z-index: 1000;
+            transition: transform 0.3s;
+        }
+
+        .chat-widget-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .chat-window {
+            position: fixed;
+            bottom: 95px;
+            right: 25px;
+            width: 360px;
+            height: 500px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 1000;
+            border: 1px solid #e0e0e0;
+        }
+
+        .chat-header {
+            background: #2c3e50;
+            color: white;
+            padding: 15px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-close {
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+
+        .chat-body {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            background: #ecf0f1;
+            /* COLOR DE FONDO PERSONALIZADO PARA CHAT */
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .msg {
+            max-width: 80%;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .msg.bot {
+            background: white;
+            color: #2c3e50;
+            align-self: flex-start;
+            border-left: 4px solid #27ae60;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .msg.user {
+            background: #27ae60;
+            color: white;
+            align-self: flex-end;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        /* CAMPO INTERACTIVO PARA ESCRIBIR DUDAS */
+        .chat-input-area {
+            display: flex;
+            padding: 10px;
+            background: white;
+            border-top: 1px solid #eee;
+            gap: 5px;
+        }
+
+        .chat-input-area input {
+            flex: 1;
+            padding: 10px 12px;
+            margin: 0;
+            font-size: 0.9rem;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+
+        .chat-input-area button {
+            width: auto;
+            margin: 0;
+            padding: 10px 15px;
+            font-size: 0.9rem;
+            background: #27ae60;
+            border-radius: 6px;
+        }
+
+        .chat-input-area button:hover {
+            background: #219653;
+        }
+
+        @media (max-width: 900px) {
+            .login-image-side {
+                display: none;
+            }
+
+            .login-form-side {
+                background-color: #2c3e50;
+            }
+
+            .chat-window {
+                width: 90%;
+                right: 5%;
+                left: 5%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="login-container">
+        <div class="login-image-side"></div>
+
+        <div class="login-form-side">
+            <div class="login-card">
+                <h2>Garita Control</h2>
+                <div class="subtitle">Módulo de Autenticación Unificado</div>
+
+                <form id="formLogin">
+                    <input type="email" placeholder="Correo electrónico" required>
+                    <input type="password" placeholder="Contraseña" required>
+
+                    <select id="rolUsuario" required>
+                        <option value="" disabled selected>Seleccione su Rol</option>
+                        <option value="admin">Administrador del Sistema</option>
+                        <option value="agente">Agente de Seguridad</option>
+                        <option value="vecino">Vecino / Residente</option>
+                    </select>
+
+                    <button type="submit">ENTRAR AL SISTEMA</button>
+                </form>
+
+                <div class="links-extra">
+                    <a href="#" onclick="alert('Funcionalidad en desarrollo: Se enviará un correo de recuperación.')">
+                        ¿Olvidó su contraseña?
+                    </a>
+                </div>
+
+                <button type="button" class="btn-google" onclick="window.location.href='https://www.google.com'">
+                    SALIR A GOOGLE
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="chat-widget-btn" id="chatBtn" onclick="toggleChat()">🤖</div>
+
+    <div class="chat-window" id="chatWindow">
+        <div class="chat-header">
+            <span>Asistente Virtual - Soporte Core</span>
+            <span class="chat-close" onclick="toggleChat()">✕</span>
+        </div>
+        <div class="chat-body" id="chatBody">
+            <div class="msg bot">¡Bienvenido al Sistema de Garita Control! ¿En qué te puedo ayudar hoy?</div>
+        </div>
+
+        <div class="chat-input-area">
+            <input type="text" id="userInputField" placeholder="Escribe tu duda aquí..."
+                onkeypress="evaluarEnter(event)">
+            <button type="button" onclick="procesarEscritura()">Enviar</button>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = "http://127.0.0.1:8000";
+
+        // --- LÓGICA DE LOGIN ---
+        document.getElementById('formLogin').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const email = document.querySelector('input[type="email"]').value;
+            const password = document.querySelector('input[type="password"]').value;
+            const rol = document.getElementById('rolUsuario').value;
+
+            if (email === 'admin@garita.com' && password === 'admin123' && rol === 'admin') {
+                localStorage.setItem('usuario_rol', 'admin');
+                window.location.href = 'admin/panel_control.html';
+                return;
+            }
+            if (email === 'agente@garita.com' && password === 'agente123' && rol === 'agente') {
+                localStorage.setItem('usuario_rol', 'agente');
+                window.location.href = 'agente/registro_visita.html';
+                return;
+            }
+
+            if (rol === 'vecino') {
+                try {
+                    const response = await fetch(`${API_URL}/residentes/`);
+                    const residentes = await response.json();
+                    const usuarioEncontrado = residentes.find(r => r.correo_notificacion === email);
+
+                    if (usuarioEncontrado) {
+                        localStorage.setItem('usuario_id', usuarioEncontrado.id);
+                        localStorage.setItem('usuario_nombre', usuarioEncontrado.nombre_propietario);
+                        localStorage.setItem('usuario_rol', 'vecino');
+                        alert(`Bienvenido, ${usuarioEncontrado.nombre_propietario}`);
+                        window.location.href = 'vecino/mi_codigo.html';
+                    } else {
+                        alert('Acceso denegado: El correo no coincide con ningún residente registrado.');
+                    }
+                } catch (error) {
+                    alert('Error de conexión con el servidor de seguridad.');
+                }
+            } else {
+                alert('Credenciales incorrectas para el rol seleccionado.');
+            }
+        });
+
+        // --- LÓGICA DEL ASISTENTE VIRTUAL ---
+        function toggleChat() {
+            const windowChat = document.getElementById('chatWindow');
+            windowChat.style.display = windowChat.style.display === 'flex' ? 'none' : 'flex';
+        }
+
+        function appendMessage(texto, emisor) {
+            const chatBody = document.getElementById('chatBody');
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `msg ${emisor}`;
+            msgDiv.innerText = texto;
+            chatBody.appendChild(msgDiv);
+            chatBody.scrollTop = chatBody.scrollHeight;
+        }
+
+        function procesarEscritura() {
+            const inputElement = document.getElementById('userInputField');
+            const textoUsuario = inputElement.value.trim();
+            if (!textoUsuario) return;
+
+            appendMessage(textoUsuario, 'user');
+            inputElement.value = "";
+
+            // MENSAJE BASE NEUTRAL Y AMIGABLE SOLICITADO
+            let respuestaBot = "Con gusto te apoyo. Cuéntame, ¿qué duda tienes sobre cómo hice el sistema, qué tecnologías usé, los paneles o sus funciones?";
+
+            // Convertimos a minúsculas y normalizamos texto (elimina acentos y limpia la 's' final de los saludos comunes)
+            let minuscula = textoUsuario.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            
+            // Reemplazos estratégicos para colapsar saludos comunes en singular o plural
+            minuscula = minuscula.replace(/buenas noches/g, "hola")
+                                 .replace(/buena noche/g, "hola")
+                                 .replace(/buenos dias/g, "hola")
+                                 .replace(/buen dia/g, "hola")
+                                 .replace(/buenas tardes/g, "hola")
+                                 .replace(/buena tarde/g, "hola")
+                                 .replace(/como estas/g, "hola")
+                                 .replace(/que tal/g, "hola");
+
+            // 1. MANEJO EXCLUSIVO DE CORTESÍAS / SALUDOS (Responde sin revelar información técnica adelantada)
+            if (minuscula === 'hola' || minuscula.split(' ').every(w => w === 'hola')) {
+                respuestaBot = "¡Hola! Muy buenas. Con gusto, ¿en qué te puedo ayudar o qué duda tienes sobre el sistema?";
+            }
+
+            // 2. TECNOLOGÍAS UTILIZADAS Y DESARROLLO
+            else if (minuscula.includes('tecnologia') || minuscula.includes('lenguaje') || minuscula.includes('como se hizo') || minuscula.includes('creo') || minuscula.includes('desarrollo') || minuscula.includes('programo')) {
+                respuestaBot = "El sistema 'Garita Control' está diseñado con una arquitectura desacoplada y moderna:\n\n" +
+                    "• Backend: Desarrollado completamente en Python utilizando el framework FastAPI por su alto rendimiento y manejo de tipado.\n" +
+                    "• Frontend: Construido con HTML5 estructural, CSS3 adaptativo para las terminales de los agentes y JavaScript asíncrono.\n" +
+                    "• Servidor de Desarrollo: Corre localmente sobre Uvicorn.";
+            }
+
+            // 3. CONEXIÓN API Y BACKEND
+            else if (minuscula.includes('api') || minuscula.includes('fastapi') || minuscula.includes('conexion') || minuscula.includes('puerto') || minuscula.includes('localhost') || minuscula.includes('8000') || minuscula.includes('fetch')) {
+                respuestaBot = "La capa de presentación (Frontend) se conecta con el Backend mediante peticiones HTTP asíncronas utilizando 'fetch' en JavaScript. " +
+                    "Todas las peticiones apuntan a la API REST en 'http://127.0.0.1:8000', donde FastAPI expone endpoints estructurados (como '/residentes/') para validar datos en tiempo real.";
+            }
+
+            // 4. BASE DE DATOS
+            else if (minuscula.includes('base de datos') || minuscula.includes('bd') || minuscula.includes('database') || minuscula.includes('sqlite') || minuscula.includes('postgres') || minuscula.includes('dato') || minuscula.includes('guardan')) {
+                respuestaBot = "Para la persistencia de la información, el backend de FastAPI se conecta a un motor de Base de Datos relacional mediante un ORM (SQLAlchemy). " +
+                    "Esta arquitectura permite almacenar de forma segura y estructurada las tablas de residentes, las credenciales cifradas y las bitácoras de auditoría de accesos.";
+            }
+
+            // 5. PANELES Y FUNCIONES (ADMIN, AGENTE, VECINO)
+            else if (minuscula.includes('panel') || minuscula.includes('funcion') || minuscula.includes('sirve') || minuscula.includes('admin') || minuscula.includes('agente') || minuscula.includes('vecino') || minuscula.includes('rol') || minuscula.includes('perfil') || minuscula.includes('acceso') || minuscula.includes('iam')) {
+                respuestaBot = "El sistema implementa un estricto Control de Accesos Basado en Roles (RBAC) con tres paneles clave:\n\n" +
+                    "• Panel de Administrador: Permite la gestión completa del IAM (usuarios), visualización de analíticas críticas y bitácoras globales.\n" +
+                    "• Panel de Agente: Optimizado para la estación física; sirve para realizar registros manuales y escanear códigos QR en tiempo real.\n" +
+                    "• Panel de Vecino/Residente: Módulo privado que sirve para la autogestión de datos y generación veloz de invitaciones temporales.";
+            }
+
+            // 6. CÓDIGOS QR Y FUNCIONAMIENTO OPERATIVO
+            else if (minuscula.includes('qr') || minuscula.includes('codigo') || minuscula.includes('invitado') || minuscula.includes('visita') || minuscula.includes('funciona') || minuscula.includes('escan')) {
+                respuestaBot = "El núcleo del control de visitas funciona con códigos QR dinámicos. El residente genera una autorización con parámetros de tiempo desde su módulo. Al presentarse en la entrada, el Agente procesa el código QR con la cámara del dispositivo, validando instantáneamente la vigencia contra la base de datos.";
+            }
+
+            // 7. RECUPERACIÓN DE CONTRASEÑAS
+            else if (minuscula.includes('contrasena') || minuscula.includes('clave') || minuscula.includes('password') || minuscula.includes('recuperar') || minuscula.includes('olvido')) {
+                respuestaBot = "Para incidentes con las credenciales, el formulario dispone del enlace '¿Olvidó su contraseña?'. Al activarse, interactúa con el backend para disparar el flujo de restablecimiento seguro mediante un token enviado al correo registrado.";
+            }
+
+            // Mantenemos el retraso de respuesta para simular procesamiento natural
+            setTimeout(() => appendMessage(respuestaBot, 'bot'), 550);
+        }
+
+        function evaluarEnter(e) {
+            if (e.key === 'Enter') {
+                procesarEscritura();
+            }
+        }
+    </script>
+</body>
+
+</html>

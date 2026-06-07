@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Garita Tecnológica - Control de Acceso</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        .container { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 100%; max-width: 500px; margin-bottom: 20px; }
+        .container-reporte { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 100%; max-width: 900px; }
+        h2, h3 { color: #2c3e50; text-align: center; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; color: #666; }
+        input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; transition: 0.3s; margin-top: 10px; }
+        .btn-search { background-color: #3498db; color: white; }
+        .btn-search:hover { background-color: #2980b9; }
+        .btn-save { background-color: #27ae60; color: white; display: none; }
+        .btn-save:hover { background-color: #219150; }
+        .btn-report { background-color: #8e44ad; color: white; width: auto; padding: 10px 20px; display: block; margin: 0 auto 20px; }
+        .btn-report:hover { background-color: #7d3c98; }
+        #resultado { margin-top: 20px; padding: 15px; border-radius: 4px; display: none; background-color: #e8f4fd; border: 1px solid #b3d7ff; }
+        .error { color: #721c24; background-color: #f8d7da; border: 1px solid #f5c6cb; padding: 10px; border-radius: 4px; margin-top: 10px; display: none; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        table, th, td { border: 1px solid #ddd; }
+        th { background-color: #2c3e50; color: white; padding: 12px; text-align: left; }
+        td { padding: 10px; color: #333; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Puesto de Control - Guardia</h2>
+    
+    <div class="form-group">
+        <label>Código Único del Residente:</label>
+        <input type="text" id="inputCodigo" placeholder="Ej: 12345">
+    </div>
+    <button class="btn-search" onclick="buscarResidente()">🔍 Verificar Código</button>
+
+    <div id="resultado">
+        <p><strong>Propietario:</strong> <span id="resNombre"></span></p>
+        <p><strong>Casa:</strong> <span id="resCasa"></span></p>
+        <hr>
+        <div class="form-group">
+            <label>Nombre del Visitante:</label>
+            <input type="text" id="visitanteNombre" placeholder="Nombre completo">
+        </div>
+        <div class="form-group">
+            <label>Placa (Opcional):</label>
+            <input type="text" id="visitantePlaca" placeholder="P-000XXX">
+        </div>
+        <button class="btn-save" id="btnRegistrar" onclick="registrarEntrada()">✅ Registrar Ingreso</button>
+    </div>
+
+    <div id="errorMsg" class="error"></div>
+</div>
+
+<div class="container-reporte">
+    <h3>Bitácora de Accesos Real-Time</h3>
+    <button class="btn-report" onclick="cargarReporte()"> Actualizar Reporte</button>
+    <table>
+        <thead>
+            <tr>
+                <th>Fecha y Hora</th>
+                <th>Visitante (ID)</th>
+                <th>Residente (ID)</th>
+                <th>Tipo</th>
+            </tr>
+        </thead>
+        <tbody id="cuerpoTabla">
+            </tbody>
+    </table>
+</div>
+
+<script>
+    const API_URL = "http://127.0.0.1:8000";
+    let residenteIdActual = null;
+
+    // BUSCAR RESIDENTE POR CÓDIGO
+    async function buscarResidente() {
+        const codigo = document.getElementById('inputCodigo').value;
+        const resDiv = document.getElementById('resultado');
+        const errDiv = document.getElementById('errorMsg');
+        
+        resDiv.style.display = 'none';
+        errDiv.style.display = 'none';
+
+        try {
+            const response = await fetch(`${API_URL}/residentes/buscar/${codigo}`);
+            if (!response.ok) throw new Error("Código no encontrado o inválido");
+
+            const data = await response.json();
+            
+            document.getElementById('resNombre').innerText = data.nombre_propietario;
+            document.getElementById('resCasa').innerText = data.numero_casa;
+            residenteIdActual = data.id;
+
+            resDiv.style.display = 'block';
+            document.getElementById('btnRegistrar').style.display = 'block';
+        } catch (error) {
+            errDiv.innerText = error.message;
+            errDiv.style.display = 'block';
+        }
+    }
+
+    // REGISTRAR NUEVA ENTRADA
+    async function registrarEntrada() {
+        const nombre = document.getElementById('visitanteNombre').value;
+        const placa = document.getElementById('visitantePlaca').value;
+
+        if (!nombre) {
+            alert("El nombre del visitante es obligatorio");
+            return;
+        }
+
+        const datosAcceso = {
+            nombre_visitante: nombre,
+            placa_vehiculo: placa || null,
+            residente_id: residenteIdActual,
+            tipo_acceso: "MANUAL"
+        };
+
+        try {
+            const response = await fetch(`${API_URL}/accesos/entrada`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(datosAcceso)
+            });
+
+            if (response.ok) {
+                alert("¡Ingreso registrado con éxito en la bitácora!");
+                location.reload(); 
+            }
+        } catch (error) {
+            alert("Error de conexión con el servidor");
+        }
+    }
+
+    // CARGAR BITÁCORA DE ACCESOS (ADMIN)
+    async function cargarReporte() {
+        try {
+            const response = await fetch(`${API_URL}/accesos/`);
+            const datos = await response.json();
+            const tabla = document.getElementById('cuerpoTabla');
+            tabla.innerHTML = ""; 
+
+            datos.forEach(acc => {
+                const fila = `<tr>
+                    <td>${new Date(acc.fecha_entrada).toLocaleString()}</td>
+                    <td>Visitante #${acc.visitante_id}</td>
+                    <td>Residente #${acc.residente_id}</td>
+                    <td><strong>${acc.tipo_acceso}</strong></td>
+                </tr>`;
+                tabla.innerHTML += fila;
+            });
+        } catch (error) {
+            alert("No se pudo obtener el reporte del servidor");
+        }
+    }
+</script>
+
+</body>
+</html>

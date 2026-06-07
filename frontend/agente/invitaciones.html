@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generar Invitación QR - Residente</title>
+    <style>
+        :root {
+            --primary: #1a252f;
+            --blue: #3498db;
+            --accent: #27ae60;
+            --warning: #f39c12;
+            --light: #f4f7f6;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: var(--light);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .card {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 420px;
+            text-align: center;
+            box-sizing: border-box;
+        }
+
+        h2 {
+            color: var(--primary);
+            margin-bottom: 10px;
+            margin-top: 0;
+        }
+
+        p {
+            color: #7f8c8d;
+            margin-bottom: 25px;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .form-group {
+            text-align: left;
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: var(--primary);
+            font-size: 0.9rem;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #eee;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 1rem;
+            transition: 0.3s;
+        }
+
+        input:focus {
+            border-color: var(--blue);
+            outline: none;
+        }
+
+        .placa-container {
+            display: flex;
+            gap: 10px;
+        }
+
+        .placa-container input {
+            flex: 1;
+        }
+
+        .btn-apie {
+            background: #e2e8f0;
+            border: 2px solid #cbd5e1;
+            color: var(--primary);
+            padding: 0 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .btn-apie.active {
+            background: var(--warning);
+            color: white;
+            border-color: var(--warning);
+        }
+
+        .btn-send {
+            background: var(--blue);
+            color: white;
+            border: none;
+            padding: 15px;
+            width: 100%;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-top: 10px;
+        }
+
+        .btn-send:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        .btn-send:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+        }
+
+        .footer-link {
+            margin-top: 25px;
+            display: block;
+            color: var(--blue);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="card">
+        <h2>🎫 Invitar Visita</h2>
+        <p>Envía un código QR de acceso al correo de tu invitado para agilizar su ingreso a la residencial.</p>
+
+        <form id="formInvitacion">
+            <div class="form-group">
+                <label>ID de Residente:</label>
+                <input type="number" id="residente_id" placeholder="Ej: 1" required>
+            </div>
+
+            <div class="form-group">
+                <label>Nombre Completo del Invitado:</label>
+                <input type="text" id="nombre_invitado" placeholder="Ej: Roberto Mercurio Chávez" required>
+            </div>
+
+            <div class="form-group">
+                <label>Correo del Invitado:</label>
+                <input type="email" id="correo_invitado" placeholder="ejemplo@correo.com" required>
+            </div>
+
+            <div class="form-group">
+                <label>Vehículo / Acceso:</label>
+                <div class="placa-container">
+                    <input type="text" id="placa_invitado" placeholder="Número de Placa" required>
+                    <button type="button" id="btnAPie" class="btn-apie" onclick="toggleAPie()">🚶 A pie</button>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-send" id="btnSubmit">ENVIAR CÓDIGO QR</button>
+        </form>
+
+        <a href="registro_visita.html" class="footer-link">← Volver al Panel de Garita</a>
+    </div>
+
+    <script>
+        const API_URL = "http://127.0.0.1:8000";
+        window.esPeaton = false;
+
+        // Auto-detectar sesión activa para agilizar el llenado
+        window.onload = () => {
+            const resId = localStorage.getItem('residente_id') || localStorage.getItem('usuario_id');
+            if (resId) {
+                const field = document.getElementById('residente_id');
+                field.value = resId;
+            }
+        };
+
+        function toggleAPie() {
+            const placaInput = document.getElementById('placa_invitado');
+            const btnAPie = document.getElementById('btnAPie');
+            window.esPeaton = !window.esPeaton;
+
+            if (window.esPeaton) {
+                btnAPie.classList.add('active');
+                placaInput.value = "A PIE";
+                placaInput.disabled = true;
+            } else {
+                btnAPie.classList.remove('active');
+                placaInput.value = "";
+                placaInput.disabled = false;
+            }
+        }
+
+        document.getElementById('formInvitacion').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const btn = document.getElementById('btnSubmit');
+            const resId = document.getElementById('residente_id').value;
+            const nombre = document.getElementById('nombre_invitado').value;
+            const correo = document.getElementById('correo_invitado').value;
+            const placa = document.getElementById('placa_invitado').value;
+
+            btn.disabled = true;
+            btn.innerText = "Generando y Enviando...";
+
+            try {
+                // CORRECCIÓN RADICAL: Consumir la API real con el JSON Payload correcto
+                const response = await fetch(`${API_URL}/accesos/`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        residente_id: parseInt(resId),
+                        nombre_visitante: nombre,
+                        placa_vehiculo: placa,
+                        correo_invitado: correo
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.status === "success") {
+                    alert(`✨ ¡Invitación enviada exitosamente!\nToken: ${data.token_generado}`);
+
+                    // Sincronizar localmente con el módulo de visualización de la Garita
+                    let solicitudesActuales = JSON.parse(localStorage.getItem('basePreAutorizados')) || [];
+                    const nuevaInvitacion = {
+                        id: Date.now(),
+                        nombre: nombre,      
+                        placa: placa,        
+                        casa: `Residente ID: ${resId}`, 
+                        estado: "CONFIRMACION",
+                        token: data.token_generado
+                    };
+
+                    solicitudesActuales.push(nuevaInvitacion);
+                    localStorage.setItem('basePreAutorizados', JSON.stringify(solicitudesActuales));
+
+                    document.getElementById('formInvitacion').reset();
+                    if (window.esPeaton) toggleAPie(); 
+                } else {
+                    alert("❌ Error: " + (data.detail || "No se pudo enviar la invitación"));
+                }
+            } catch (error) {
+                console.error(error);
+                alert("🔌 Error de conexión con el servidor backend FastAPI");
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "ENVIAR CÓDIGO QR";
+            }
+        });
+    </script>
+</body>
+</html>
